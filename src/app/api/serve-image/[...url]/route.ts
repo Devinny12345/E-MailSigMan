@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ url: string }> }
+  { params }: { params: Promise<{ url: string[] }> }
 ) {
   try {
-    const { url: encodedUrl } = await params;
-    const blobUrl = decodeURIComponent(encodedUrl);
+    const { url } = await params;
+    const blobUrl = decodeURIComponent(url.join("/"));
 
     if (!blobUrl.includes("blob.vercel-storage.com")) {
       return new Response("Invalid URL", { status: 400 });
