@@ -19,7 +19,12 @@ export interface SignatureData {
   taglineLine2: string;
 }
 
-function imgRoute(id: string, type: string, baseUrl: string): string {
+// Use direct URL if it's already a full public URL (e.g. Vercel Blob CDN),
+// otherwise fall back to the app proxy route.
+function resolveImageUrl(storedUrl: string, id: string, type: string, baseUrl: string): string {
+  if (storedUrl && (storedUrl.startsWith("http://") || storedUrl.startsWith("https://"))) {
+    return storedUrl;
+  }
   return `${baseUrl}/img/${id}/${type}`;
 }
 
@@ -36,10 +41,10 @@ function socialIcon(href: string, bgColor: string, label: string): string {
 }
 
 export function generateSignatureHtml(sig: SignatureData, baseUrl: string): string {
-  const logoSrc = sig.companyLogoUrl ? imgRoute(sig.id, "logo", baseUrl) : "";
-  const avatarSrc = sig.avatarUrl ? imgRoute(sig.id, "avatar", baseUrl) : "";
+  const logoSrc = sig.companyLogoUrl ? resolveImageUrl(sig.companyLogoUrl, sig.id, "logo", baseUrl) : "";
+  const avatarSrc = sig.avatarUrl ? resolveImageUrl(sig.avatarUrl, sig.id, "avatar", baseUrl) : "";
   const avatarLink = sig.landingPageUrl || `mailto:${sig.email}`;
-  const gifSrc = sig.loopingGifUrl ? imgRoute(sig.id, "gif", baseUrl) : `${baseUrl}/api/serve-gif/${sig.id}`;
+  const gifSrc = sig.loopingGifUrl ? resolveImageUrl(sig.loopingGifUrl, sig.id, "gif", baseUrl) : "";
 
   const socialIcons = `
           <td width="110" valign="middle">
