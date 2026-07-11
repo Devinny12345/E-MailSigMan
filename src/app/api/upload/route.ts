@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { put } from "@vercel/blob";
 import { writeFile } from "fs/promises";
 import { join } from "path";
 
@@ -25,6 +26,16 @@ export async function POST(request: Request) {
         { error: "File must be under 2MB" },
         { status: 400 }
       );
+    }
+
+    const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+
+    if (blobToken && blobToken !== "placeholder") {
+      const blob = await put(file.name, file, {
+        access: "public",
+        contentType: file.type,
+      });
+      return NextResponse.json({ url: blob.url });
     }
 
     const bytes = await file.arrayBuffer();
