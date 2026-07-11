@@ -23,12 +23,20 @@ async function fetchImageAsDataUrl(url: string): Promise<string | null> {
 
 async function getFontData(): Promise<ArrayBuffer | null> {
   try {
-    const response = await fetch(
-      "https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa2JL7SUc.woff2",
-      { signal: AbortSignal.timeout(5000) }
+    const cssRes = await fetch(
+      "https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap",
+      {
+        headers: { "User-Agent": "Mozilla/5.0" },
+        signal: AbortSignal.timeout(5000),
+      }
     );
-    if (!response.ok) return null;
-    return response.arrayBuffer();
+    if (!cssRes.ok) return null;
+    const css = await cssRes.text();
+    const woffMatch = css.match(/url\((https:\/\/fonts\.gstatic\.com\/[^)]+\.woff)\)/);
+    if (!woffMatch) return null;
+    const fontRes = await fetch(woffMatch[1], { signal: AbortSignal.timeout(5000) });
+    if (!fontRes.ok) return null;
+    return fontRes.arrayBuffer();
   } catch {
     return null;
   }
@@ -294,11 +302,13 @@ export async function GET(
           : undefined,
         headers: {
           "Cache-Control": "public, max-age=86400",
+          "Access-Control-Allow-Origin": "*",
         },
       }
     );
   } catch (error) {
     console.error("sig-image error:", error);
-    return new Response("Image generation failed", { status: 500 });
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return new Response(`Image generation failed: ${message}`, { status: 500 });
   }
 }
