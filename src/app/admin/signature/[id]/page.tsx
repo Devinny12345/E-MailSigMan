@@ -9,6 +9,7 @@ export default function SignaturePreviewPage() {
   const params = useParams();
   const [sig, setSig] = useState<SignatureData | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedImg, setCopiedImg] = useState(false);
 
   useEffect(() => {
     fetch(`/api/signatures/${params.id}`)
@@ -73,10 +74,6 @@ export default function SignaturePreviewPage() {
             <button 
               onClick={() => {
                 navigator.clipboard.writeText(`${baseUrl}/s/${sig.id}`);
-                // Could add a separate copied state for this button if needed, 
-                // but a simple alert or reusing the existing one is fine for now.
-                // Reusing handleCopy style would require a separate state variable.
-                // For simplicity, just copying to clipboard.
               }} 
               className="bg-slate-100 text-slate-700 px-4 py-1.5 rounded-lg hover:bg-slate-200 transition text-sm font-medium border border-slate-200"
             >
@@ -90,6 +87,32 @@ export default function SignaturePreviewPage() {
             className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm text-slate-700 font-mono outline-none" 
             onClick={(e) => e.currentTarget.select()}
           />
+        </div>
+
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-slate-500 uppercase">Signature Image URL</h2>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`${baseUrl}/sig-image/${sig.id}`);
+                setCopiedImg(true);
+                setTimeout(() => setCopiedImg(false), 2000);
+              }}
+              className="bg-slate-100 text-slate-700 px-4 py-1.5 rounded-lg hover:bg-slate-200 transition text-sm font-medium border border-slate-200"
+            >
+              {copiedImg ? "Copied!" : "Copy URL"}
+            </button>
+          </div>
+          <input
+            type="text"
+            readOnly
+            value={`${baseUrl}/sig-image/${sig.id}`}
+            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm text-slate-700 font-mono outline-none"
+            onClick={(e) => e.currentTarget.select()}
+          />
+          <p className="text-xs text-slate-400 mt-2">
+            Paste this URL in an <code className="text-xs bg-slate-100 px-1 rounded">{'<img>'}</code> tag to embed the signature as an image.
+          </p>
         </div>
 
         <div className="bg-white rounded-xl border border-slate-200 p-6">
