@@ -1,14 +1,21 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { type SignatureData } from "@/lib/generateHtml";
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const [signatures, setSignatures] = useState<SignatureData[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [selectedTag, setSelectedTag] = useState("all");
   const [loading, setLoading] = useState(true);
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/admin/login");
+  };
 
   const fetchSignatures = useCallback(async (tag?: string) => {
     setLoading(true);
@@ -43,9 +50,14 @@ export default function AdminDashboard() {
       <header className="bg-white border-b border-slate-200 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <h1 className="text-2xl font-bold text-slate-900">Email Signatures</h1>
-          <Link href="/admin/new" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
-            + New Signature
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/admin/new" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
+              + New Signature
+            </Link>
+            <button onClick={handleLogout} className="border border-slate-300 text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-50 transition font-medium text-sm">
+              Sign Out
+            </button>
+          </div>
         </div>
       </header>
 
