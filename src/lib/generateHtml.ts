@@ -21,13 +21,17 @@ export interface SignatureData {
 
 function proxyUrl(url: string, baseUrl: string): string {
   if (!url || !url.includes("blob.vercel-storage.com")) return url;
-  return `${baseUrl}/api/serve-image/${encodeURIComponent(url)}`;
+  return url;
+}
+
+function imgRoute(id: string, type: string, baseUrl: string): string {
+  return `${baseUrl}/img/${id}/${type}`;
 }
 
 export function generateSignatureHtml(sig: SignatureData, baseUrl: string): string {
-  const logoSrc = proxyUrl(sig.companyLogoUrl, baseUrl);
-  const avatarSrc = proxyUrl(sig.avatarUrl, baseUrl);
-  const gifSrc = proxyUrl(sig.loopingGifUrl, baseUrl) || `${baseUrl}/api/serve-gif/${sig.id}`;
+  const logoSrc = sig.companyLogoUrl ? imgRoute(sig.id, "logo", baseUrl) : "";
+  const avatarSrc = sig.avatarUrl ? imgRoute(sig.id, "avatar", baseUrl) : "";
+  const gifSrc = sig.loopingGifUrl ? imgRoute(sig.id, "gif", baseUrl) : `${baseUrl}/api/serve-gif/${sig.id}`;
 
   const socialIcons = `
           <td width="110" valign="middle">
