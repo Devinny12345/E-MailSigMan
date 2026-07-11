@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { generateSignatureHtml } from "@/lib/generateHtml";
+import { headers } from "next/headers";
 
 export default async function PublicSignaturePage({
   params,
@@ -7,6 +8,10 @@ export default async function PublicSignaturePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const h = await headers();
+  const host = h.get("x-forwarded-host") || h.get("host") || "e-mail-sig-man-6qlb.vercel.app";
+  const proto = h.get("x-forwarded-proto") || "https";
+  const baseUrl = `${proto}://${host}`;
 
   const sig = await prisma.signature.findUnique({ where: { id } });
 
@@ -18,7 +23,6 @@ export default async function PublicSignaturePage({
     );
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:4000";
   const htmlSnippet = generateSignatureHtml(sig as Parameters<typeof generateSignatureHtml>[0], baseUrl);
 
   return (

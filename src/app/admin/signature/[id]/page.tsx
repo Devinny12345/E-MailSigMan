@@ -24,7 +24,7 @@ export default function SignaturePreviewPage() {
     );
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:4000";
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://e-mail-sig-man-6qlb.vercel.app";
   const htmlSnippet = generateSignatureHtml(sig, baseUrl);
   const gifUrl = `${baseUrl}/api/serve-gif/${sig.id}`;
 
