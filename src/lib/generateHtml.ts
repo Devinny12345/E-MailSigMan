@@ -25,7 +25,9 @@ function proxyUrl(url: string, baseUrl: string): string {
 }
 
 export function generateSignatureHtml(sig: SignatureData, baseUrl: string): string {
-  const gifUrl = `${baseUrl}/api/serve-gif/${sig.id}`;
+  const logoSrc = proxyUrl(sig.companyLogoUrl, baseUrl);
+  const avatarSrc = proxyUrl(sig.avatarUrl, baseUrl);
+  const gifSrc = proxyUrl(sig.loopingGifUrl, baseUrl) || `${baseUrl}/api/serve-gif/${sig.id}`;
 
   const socialIcons = `
           <td width="110" valign="middle">
@@ -64,9 +66,9 @@ export function generateSignatureHtml(sig: SignatureData, baseUrl: string): stri
     <td colspan="3" style="padding:20px 24px 16px 24px;">
       <table cellpadding="0" cellspacing="0" border="0" width="100%">
         <tr>
-          ${sig.companyLogoUrl ? `<td width="150" valign="middle">
+          ${logoSrc ? `<td width="150" valign="middle">
             <a href="${sig.landingPageUrl || '#'}" style="text-decoration:none;">
-              <img src="${sig.companyLogoUrl}" width="130" height="90" alt="Company Logo" style="display:block; border:1px solid #2f5f8f; border-radius:14px; width:130px; height:90px; object-fit:contain; background-color:#ffffff;" />
+              <img src="${logoSrc}" width="130" height="90" alt="Company Logo" style="display:block; border:1px solid #2f5f8f; border-radius:14px; width:130px; height:90px; object-fit:contain; background-color:#ffffff;" />
             </a>
           </td>` : ""}
 
@@ -105,8 +107,8 @@ export function generateSignatureHtml(sig: SignatureData, baseUrl: string): stri
             </table>
           </td>
 
-          ${sig.avatarUrl ? `<td width="100" valign="middle" style="text-align:right;">
-            <img src="${sig.avatarUrl}" width="90" height="90" alt="${sig.name}" style="display:inline-block; border:2px solid #ffffff; border-radius:16px; width:90px; height:90px; object-fit:cover; background-color:#ffffff;" />
+          ${avatarSrc ? `<td width="100" valign="middle" style="text-align:right;">
+            <img src="${avatarSrc}" width="90" height="90" alt="${sig.name}" style="display:inline-block; border:2px solid #ffffff; border-radius:16px; width:90px; height:90px; object-fit:cover; background-color:#ffffff;" />
           </td>` : ""}
         </tr>
       </table>
