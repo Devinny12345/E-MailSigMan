@@ -19,6 +19,11 @@ export interface SignatureData {
   taglineLine2: string;
 }
 
+function proxyUrl(url: string, baseUrl: string): string {
+  if (!url || !url.includes("blob.vercel-storage.com")) return url;
+  return `${baseUrl}/api/serve-image/${encodeURIComponent(url)}`;
+}
+
 export function generateSignatureHtml(sig: SignatureData, baseUrl: string): string {
   const gifUrl = `${baseUrl}/api/serve-gif/${sig.id}`;
 
