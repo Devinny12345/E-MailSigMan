@@ -69,6 +69,31 @@ export default function SignaturePreviewPage() {
 
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-slate-500 uppercase">Public Link</h2>
+            <button 
+              onClick={() => {
+                navigator.clipboard.writeText(`${baseUrl}/s/${sig.id}`);
+                // Could add a separate copied state for this button if needed, 
+                // but a simple alert or reusing the existing one is fine for now.
+                // Reusing handleCopy style would require a separate state variable.
+                // For simplicity, just copying to clipboard.
+              }} 
+              className="bg-slate-100 text-slate-700 px-4 py-1.5 rounded-lg hover:bg-slate-200 transition text-sm font-medium border border-slate-200"
+            >
+              Copy Link
+            </button>
+          </div>
+          <input 
+            type="text" 
+            readOnly 
+            value={`${baseUrl}/s/${sig.id}`} 
+            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm text-slate-700 font-mono outline-none" 
+            onClick={(e) => e.currentTarget.select()}
+          />
+        </div>
+
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-slate-500 uppercase">HTML Snippet</h2>
             <button onClick={handleCopy} className="bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700 transition text-sm font-medium">
               {copied ? "Copied!" : "Copy HTML"}
