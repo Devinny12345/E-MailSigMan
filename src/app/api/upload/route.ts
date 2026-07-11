@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 import { put } from "@vercel/blob";
-import { writeFile } from "fs/promises";
-import { join } from "path";
 
 export async function POST(request: Request) {
   try {
@@ -28,29 +26,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+    const blob = await put(`${Date.now()}-${file.name}`, file, {
+      access: "public",
+      contentType: file.type,
+    });
 
-    if (blobToken && blobToken !== "placeholder") {
-      const blob = await put(file.name, file, {
-        access: "public",
-        contentType: file.type,
-      });
-      return NextResponse.json({ url: blob.url });
-    }
-
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    const ext = file.name.split(".").pop();
-    const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const filepath = join(process.cwd(), "public", "uploads", filename);
-
-    await writeFile(filepath, buffer);
-
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:4000";
-    const url = `${baseUrl}/uploads/${filename}`;
-
-    return NextResponse.json({ url });
+    return NextResponse.json({ url: blob.url });
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }
