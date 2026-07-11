@@ -5,7 +5,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string[] }> }
 ) {
   try {
-    const [id, type] = await params.id;
+    const { id: idArr } = await params;
+    const [id, type] = idArr;
 
     if (!id || !type) {
       return new Response("Invalid path", { status: 400 });
