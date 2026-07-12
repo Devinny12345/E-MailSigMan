@@ -1,5 +1,4 @@
 import { ImageResponse } from "next/og";
-import { put } from "@vercel/blob";
 
 export interface SignatureImageInput {
   id: string;
@@ -135,7 +134,7 @@ function buildImageReact(sig: SignatureImageInput, logoDataUrl: string | null, a
           {sig.instagramUrl && socialCircle("ig", "#E4405F")}
           {sig.youtubeUrl && socialCircle("\u25B6", "#FF0000")}
         </div>
-        <div style={{ flex: 1, textAlign: "right" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
           {sig.taglineLine1 && (
             <div style={{ fontSize: 14, color: "#a9c6e0", lineHeight: 1.2 }}>{sig.taglineLine1}</div>
           )}
@@ -150,7 +149,7 @@ function buildImageReact(sig: SignatureImageInput, logoDataUrl: string | null, a
   );
 }
 
-export async function generateSignatureImage(sig: SignatureImageInput): Promise<string> {
+export async function generateSignatureImagePng(sig: SignatureImageInput): Promise<Buffer> {
   const [fontData, logoDataUrl, avatarDataUrl] = await Promise.all([
     getFontData(),
     sig.companyLogoUrl ? fetchImageAsDataUrl(sig.companyLogoUrl) : null,
@@ -172,14 +171,5 @@ export async function generateSignatureImage(sig: SignatureImageInput): Promise<
     }
   );
 
-  const pngBuffer = Buffer.from(await response.arrayBuffer());
-
-  const blob = await put(`signatures/${sig.id}.png`, pngBuffer, {
-    access: "public",
-    contentType: "image/png",
-    addRandomSuffix: false,
-    token: process.env.BLOB_READ_WRITE_TOKEN,
-  });
-
-  return blob.url;
+  return Buffer.from(await response.arrayBuffer());
 }
