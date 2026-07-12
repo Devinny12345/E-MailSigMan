@@ -1,48 +1,31 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { type SignatureData } from "@/lib/generateHtml";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@convex/_generated/api";
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [signatures, setSignatures] = useState<SignatureData[]>([]);
-  const [tags, setTags] = useState<string[]>([]);
   const [selectedTag, setSelectedTag] = useState("all");
-  const [loading, setLoading] = useState(true);
+
+  const signatures = useQuery(api.signatures.list, { tag: selectedTag });
+  const removeSignature = useMutation(api.signatures.remove);
+
+  const allSignatures = useQuery(api.signatures.list, {});
+  const tags = allSignatures
+    ? [...new Set(allSignatures.map((s) => s.tag).filter(Boolean))]
+    : [];
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/admin/login");
   };
 
-  const fetchSignatures = useCallback(async (tag?: string) => {
-    setLoading(true);
-    const url = tag && tag !== "all"
-      ? `/api/signatures?tag=${encodeURIComponent(tag)}`
-      : "/api/signatures";
-    const res = await fetch(url);
-    const data = await res.json();
-    setSignatures(data);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    fetchSignatures(selectedTag);
-  }, [selectedTag, fetchSignatures]);
-
-  useEffect(() => {
-    fetch("/api/signatures").then((r) => r.json()).then((data: SignatureData[]) => {
-      const uniqueTags = [...new Set(data.map((s) => s.tag).filter(Boolean))];
-      setTags(uniqueTags);
-    });
-  }, []);
-
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this signature?")) return;
-    await fetch(`/api/signatures/${id}`, { method: "DELETE" });
-    fetchSignatures(selectedTag);
+    await removeSignature({ id: id as any });
   };
 
   return (
@@ -72,7 +55,7 @@ export default function AdminDashboard() {
           </select>
         </div>
 
-        {loading ? (
+        {signatures === undefined ? (
           <p className="text-slate-500">Loading...</p>
         ) : signatures.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
@@ -96,7 +79,7 @@ export default function AdminDashboard() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {signatures.map((sig) => (
-                  <tr key={sig.id} className="hover:bg-slate-50 transition">
+                  <tr key={sig._id} className="hover:bg-slate-50 transition">
                     <td className="px-6 py-4 font-medium text-slate-900">{sig.name}</td>
                     <td className="px-6 py-4 text-slate-600">{sig.title}</td>
                     <td className="px-6 py-4 text-slate-600">{sig.email}</td>
@@ -113,13 +96,13 @@ export default function AdminDashboard() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
-                      <Link href={`/admin/signature/${sig.id}`} className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                      <Link href={`/admin/signature/${sig._id}`} className="text-blue-600 hover:text-blue-700 text-sm font-medium">
                         Preview
                       </Link>
-                      <Link href={`/admin/edit/${sig.id}`} className="text-slate-600 hover:text-slate-700 text-sm font-medium">
+                      <Link href={`/admin/edit/${sig._id}`} className="text-slate-600 hover:text-slate-700 text-sm font-medium">
                         Edit
                       </Link>
-                      <button onClick={() => handleDelete(sig.id)} className="text-red-600 hover:text-red-700 text-sm font-medium">
+                      <button onClick={() => handleDelete(sig._id)} className="text-red-600 hover:text-red-700 text-sm font-medium">
                         Delete
                       </button>
                     </td>

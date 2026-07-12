@@ -1,29 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { generateSignatureHtml, type SignatureData } from "@/lib/generateHtml";
+import { useQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
+import { generateSignatureHtml } from "@/lib/generateHtml";
 
 export default function SignaturePreviewPage() {
   const params = useParams();
-  const [sig, setSig] = useState<SignatureData | null>(null);
   const [copied, setCopied] = useState(false);
   const [copiedImg, setCopiedImg] = useState(false);
 
-  useEffect(() => {
-    fetch(`/api/signatures/${params.id}`)
-      .then((r) => r.json())
-      .then(setSig);
-  }, [params.id]);
+  const rawSig = useQuery(api.signatures.get, { id: params.id as any });
 
-  if (!sig) {
+  if (!rawSig) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <p className="text-slate-500">Loading...</p>
       </div>
     );
   }
+
+  const sig = { ...rawSig, id: rawSig._id };
 
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://e-mail-sig-man.vercel.app";
   const htmlSnippet = generateSignatureHtml(sig, baseUrl);

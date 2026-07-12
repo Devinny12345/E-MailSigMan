@@ -1,4 +1,7 @@
-import { prisma } from "@/lib/prisma";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "@convex/_generated/api";
+
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export async function GET(
   _request: Request,
@@ -6,7 +9,7 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  const signature = await prisma.signature.findUnique({ where: { id } });
+  const signature = await convex.query(api.signatures.get, { id: id as any });
 
   if (!signature || !signature.loopingGifUrl) {
     return new Response("Not found", { status: 404 });

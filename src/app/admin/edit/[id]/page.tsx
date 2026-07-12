@@ -1,39 +1,44 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import SignatureForm from "@/app/components/SignatureForm";
-import { type SignatureData } from "@/lib/generateHtml";
+import { useQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
 
 export default function EditSignaturePage() {
   const params = useParams();
   const router = useRouter();
-  const [signature, setSignature] = useState<SignatureData | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch(`/api/signatures/${params.id}`)
-      .then((r) => {
-        if (!r.ok) throw new Error("Not found");
-        return r.json();
-      })
-      .then((data) => {
-        setSignature(data);
-        setLoading(false);
-      })
-      .catch(() => {
-        alert("Signature not found");
-        router.push("/admin");
-      });
-  }, [params.id, router]);
+  const rawSig = useQuery(api.signatures.get, { id: params.id as any });
 
-  if (loading || !signature) {
+  if (!rawSig) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <p className="text-slate-500">Loading...</p>
       </div>
     );
   }
+
+  const signature = {
+    id: rawSig._id,
+    name: rawSig.name,
+    title: rawSig.title,
+    email: rawSig.email,
+    phone: rawSig.phone,
+    avatarUrl: rawSig.avatarUrl,
+    loopingGifUrl: rawSig.loopingGifUrl,
+    landingPageUrl: rawSig.landingPageUrl,
+    tag: rawSig.tag,
+    isActive: rawSig.isActive,
+    companyLogoUrl: rawSig.companyLogoUrl,
+    website: rawSig.website,
+    address: rawSig.address,
+    facebookUrl: rawSig.facebookUrl,
+    instagramUrl: rawSig.instagramUrl,
+    youtubeUrl: rawSig.youtubeUrl,
+    taglineLine1: rawSig.taglineLine1,
+    taglineLine2: rawSig.taglineLine2,
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">

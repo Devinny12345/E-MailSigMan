@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation } from "convex/react";
+import { api } from "@convex/_generated/api";
 
 interface FormData {
   name: string;
@@ -54,6 +56,9 @@ export default function SignatureForm({ initialData, mode }: Props) {
   const [uploading, setUploading] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const createSignature = useMutation(api.signatures.create);
+  const updateSignature = useMutation(api.signatures.update);
+
   const handleFileUpload = async (field: "avatarUrl" | "loopingGifUrl" | "companyLogoUrl", file: File) => {
     setUploading(field);
     const formData = new FormData();
@@ -79,24 +84,50 @@ export default function SignatureForm({ initialData, mode }: Props) {
     e.preventDefault();
     setSaving(true);
 
-    const url = mode === "edit" && initialData
-      ? `/api/signatures/${initialData.id}`
-      : "/api/signatures";
-
-    const method = mode === "edit" ? "PUT" : "POST";
-
     try {
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        router.push(mode === "edit" ? `/admin/signature/${data.id}` : "/admin");
+      if (mode === "edit" && initialData) {
+        const result = await updateSignature({
+          id: initialData.id as any,
+          name: form.name,
+          title: form.title,
+          email: form.email,
+          phone: form.phone,
+          avatarUrl: form.avatarUrl,
+          loopingGifUrl: form.loopingGifUrl,
+          landingPageUrl: form.landingPageUrl,
+          tag: form.tag,
+          isActive: form.isActive,
+          companyLogoUrl: form.companyLogoUrl,
+          website: form.website,
+          address: form.address,
+          facebookUrl: form.facebookUrl,
+          instagramUrl: form.instagramUrl,
+          youtubeUrl: form.youtubeUrl,
+          taglineLine1: form.taglineLine1,
+          taglineLine2: form.taglineLine2,
+        });
+        router.push(`/admin/signature/${result!._id}`);
       } else {
-        alert("Failed to save");
+        const result = await createSignature({
+          name: form.name,
+          title: form.title,
+          email: form.email,
+          phone: form.phone,
+          avatarUrl: form.avatarUrl,
+          loopingGifUrl: form.loopingGifUrl,
+          landingPageUrl: form.landingPageUrl,
+          tag: form.tag,
+          isActive: form.isActive,
+          companyLogoUrl: form.companyLogoUrl,
+          website: form.website,
+          address: form.address,
+          facebookUrl: form.facebookUrl,
+          instagramUrl: form.instagramUrl,
+          youtubeUrl: form.youtubeUrl,
+          taglineLine1: form.taglineLine1,
+          taglineLine2: form.taglineLine2,
+        });
+        router.push("/admin");
       }
     } catch {
       alert("Failed to save");

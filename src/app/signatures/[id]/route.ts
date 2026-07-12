@@ -1,7 +1,10 @@
-import { prisma } from "@/lib/prisma";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "@convex/_generated/api";
 import { generateSignatureImage } from "@/lib/generateImage";
 
 export const runtime = "nodejs";
+
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export async function GET(
   _request: Request,
@@ -9,7 +12,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const sig = await prisma.signature.findUnique({ where: { id } });
+    const sig = await convex.query(api.signatures.get, { id: id as any });
     if (!sig) {
       return new Response("Not found", { status: 404 });
     }
@@ -18,7 +21,7 @@ export async function GET(
 
     if (!imageUrl) {
       imageUrl = await generateSignatureImage({
-        id: sig.id,
+        id: sig._id,
         name: sig.name,
         title: sig.title,
         email: sig.email,
@@ -34,10 +37,7 @@ export async function GET(
         taglineLine2: sig.taglineLine2,
       });
 
-      await prisma.signature.update({
-        where: { id },
-        data: { imageUrl },
-      });
+      await convex.mutation(api.signatures.updateImageUrl, { id: sig._id, imageUrl });
     }
 
     const token = process.env.BLOB_READ_WRITE_TOKEN;

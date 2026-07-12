@@ -1,4 +1,5 @@
-import { prisma } from "@/lib/prisma";
+import { fetchQuery } from "convex/nextjs";
+import { api } from "@convex/_generated/api";
 import { generateSignatureHtml } from "@/lib/generateHtml";
 import { headers } from "next/headers";
 
@@ -13,7 +14,7 @@ export default async function PublicSignaturePage({
   const proto = h.get("x-forwarded-proto") || "https";
   const baseUrl = `${proto}://${host}`;
 
-  const sig = await prisma.signature.findUnique({ where: { id } });
+  const sig = await fetchQuery(api.signatures.get, { id: id as any });
 
   if (!sig || !sig.isActive) {
     return (
@@ -23,7 +24,8 @@ export default async function PublicSignaturePage({
     );
   }
 
-  const htmlSnippet = generateSignatureHtml(sig as Parameters<typeof generateSignatureHtml>[0], baseUrl);
+  const sigData = { ...sig, id: sig._id };
+  const htmlSnippet = generateSignatureHtml(sigData, baseUrl);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6" style={{ backgroundColor: "#0d3b66" }}>
