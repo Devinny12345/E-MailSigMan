@@ -1,6 +1,6 @@
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
-import { generateSignatureImagePng } from "@/lib/generateImage";
+import { generateSignatureImage } from "@/lib/generateImage";
 
 export const runtime = "nodejs";
 
@@ -9,7 +9,7 @@ function getConvex() {
 }
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -21,31 +21,40 @@ export async function POST(
       return Response.json({ error: "Not found" }, { status: 404 });
     }
 
-    const imageBuffer = await generateSignatureImagePng({
-      id: sig._id,
-      name: sig.name,
-      title: sig.title,
-      email: sig.email,
-      phone: sig.phone,
-      avatarUrl: sig.avatarUrl,
-      companyLogoUrl: sig.companyLogoUrl,
-      website: sig.website,
-      address: sig.address,
-      facebookUrl: sig.facebookUrl,
-      instagramUrl: sig.instagramUrl,
-      youtubeUrl: sig.youtubeUrl,
-      taglineLine1: sig.taglineLine1,
-      taglineLine2: sig.taglineLine2,
-    });
+    const url = new URL(request.url);
+    const format = (url.searchParams.get("format") as "png" | "jpeg") || "png";
+
+    const imageBuffer = await generateSignatureImage(
+      {
+        id: sig._id,
+        name: sig.name,
+        title: sig.title,
+        email: sig.email,
+        phone: sig.phone,
+        avatarUrl: sig.avatarUrl,
+        companyLogoUrl: sig.companyLogoUrl,
+        website: sig.website,
+        address: sig.address,
+        facebookUrl: sig.facebookUrl,
+        instagramUrl: sig.instagramUrl,
+        youtubeUrl: sig.youtubeUrl,
+        taglineLine1: sig.taglineLine1,
+        taglineLine2: sig.taglineLine2,
+      },
+      format
+    );
 
     const siteUrl = process.env.NEXT_PUBLIC_CONVEX_SITE_URL;
     if (!siteUrl) {
       return Response.json({ error: "Convex site URL not configured" }, { status: 500 });
     }
 
+    const mimeType = format === "jpeg" ? "image/jpeg" : "image/png";
+    const ext = format === "jpeg" ? "jpg" : "png";
+
     const formData = new FormData();
-    const blob = new Blob([new Uint8Array(imageBuffer)], { type: "image/png" });
-    formData.append("file", blob, `${sig._id}.png`);
+    const blob = new Blob([new Uint8Array(imageBuffer)], { type: mimeType });
+    formData.append("file", blob, `${sig._id}.${ext}`);
 
     const uploadRes = await fetch(`${siteUrl}/upload`, {
       method: "POST",
@@ -65,7 +74,7 @@ export async function POST(
       imageUrl,
     });
 
-    return Response.json({ url: imageUrl });
+    return Response.json({ url: imageUrl, format });
   } catch (error: any) {
     console.error("render error:", error?.message || error);
     return Response.json({ error: error?.message || "Render failed" }, { status: 500 });

@@ -1,6 +1,6 @@
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
-import { generateSignatureImagePng } from "@/lib/generateImage";
+import { generateSignatureImage } from "@/lib/generateImage";
 
 export const runtime = "nodejs";
 
@@ -20,7 +20,7 @@ export async function GET(
       return new Response("Not found", { status: 404 });
     }
 
-    const pngBuffer = await generateSignatureImagePng({
+    const pngBuffer = await generateSignatureImage({
       id: sig._id,
       name: sig.name,
       title: sig.title,

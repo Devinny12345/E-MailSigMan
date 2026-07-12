@@ -1,5 +1,7 @@
 import { ImageResponse } from "next/og";
 
+export type ImageFormat = "png" | "jpeg";
+
 export interface SignatureImageInput {
   id: string;
   name: string;
@@ -15,6 +17,11 @@ export interface SignatureImageInput {
   youtubeUrl: string;
   taglineLine1: string;
   taglineLine2: string;
+}
+
+export interface RenderOptions {
+  format?: ImageFormat;
+  quality?: number;
 }
 
 async function fetchImageAsDataUrl(url: string): Promise<string | null> {
@@ -144,8 +151,9 @@ function buildImageReact(sig: SignatureImageInput, logoDataUrl: string | null, a
   );
 }
 
-export async function generateSignatureImagePng(
-  sig: SignatureImageInput
+export async function generateSignatureImage(
+  sig: SignatureImageInput,
+  format: "png" | "jpeg" = "png"
 ): Promise<Buffer> {
   const [fontData, logoDataUrl, avatarDataUrl] = await Promise.all([
     getFontData(),
@@ -165,7 +173,8 @@ export async function generateSignatureImagePng(
             { name: "Inter", data: fontData, weight: 700, style: "normal" },
           ]
         : undefined,
-    }
+      format,
+    } as any
   );
 
   return Buffer.from(await response.arrayBuffer());
