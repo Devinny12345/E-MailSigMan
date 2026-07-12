@@ -4,7 +4,9 @@ import { generateSignatureImagePng } from "@/lib/generateImage";
 
 export const runtime = "nodejs";
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+function getConvex() {
+  return new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+}
 
 export async function GET(
   _request: Request,
@@ -12,6 +14,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const convex = getConvex();
     const sig = await convex.query(api.signatures.get, { id: id as any });
     if (!sig) {
       return new Response("Not found", { status: 404 });
