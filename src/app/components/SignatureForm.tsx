@@ -65,13 +65,19 @@ export default function SignatureForm({ initialData, mode }: Props) {
     formData.append("file", file);
 
     try {
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const siteUrl = process.env.NEXT_PUBLIC_CONVEX_SITE_URL;
+      if (!siteUrl) {
+        alert("Upload service not configured");
+        return;
+      }
+      const res = await fetch(`${siteUrl}/upload`, { method: "POST", body: formData });
       if (!res.ok) {
         const err = await res.json();
         alert(err.error || "Upload failed");
         return;
       }
-      const { url } = await res.json();
+      const { storageId } = await res.json();
+      const url = `${siteUrl}/files/${storageId}`;
       setForm((prev) => ({ ...prev, [field]: url }));
     } catch {
       alert("Upload failed");

@@ -9,6 +9,7 @@
  */
 
 import type * as signatures from "../signatures.js";
+import type * as admins from "../admins.js";
 
 import type {
   ApiFromModules,
@@ -18,6 +19,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   signatures: typeof signatures;
+  admins: typeof admins;
 }>;
 
 /**

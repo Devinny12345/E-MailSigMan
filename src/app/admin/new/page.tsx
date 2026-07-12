@@ -1,5 +1,7 @@
 import SignatureForm from "@/app/components/SignatureForm";
 
+export const dynamic = "force-dynamic";
+
 export default function NewSignaturePage() {
   return (
     <div className="min-h-screen bg-slate-50">

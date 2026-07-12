@@ -26,4 +26,9 @@ export default defineSchema({
   })
     .index("by_tag", ["tag"])
     .index("by_created", ["createdAt"]),
+
+  admins: defineTable({
+    username: v.string(),
+    password: v.string(),
+  }),
 });

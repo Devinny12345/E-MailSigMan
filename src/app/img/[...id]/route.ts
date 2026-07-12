@@ -1,12 +1,16 @@
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
 
+function getConvex() {
+  return new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string[] }> }
 ) {
   try {
-    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+    const convex = getConvex();
     const { id: idArr } = await params;
     const [id, type] = idArr;
 
@@ -31,14 +35,7 @@ export async function GET(
       return new Response("No image", { status: 404 });
     }
 
-    const token = process.env.BLOB_READ_WRITE_TOKEN;
-
-    const headers: Record<string, string> = {};
-    if (token && imageUrl.includes("blob.vercel-storage.com")) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-
-    const response = await fetch(imageUrl, { headers });
+    const response = await fetch(imageUrl);
 
     if (!response.ok) {
       return new Response("Failed to fetch image", { status: 502 });

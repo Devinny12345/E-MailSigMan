@@ -3,6 +3,8 @@ import { api } from "@convex/_generated/api";
 import { generateSignatureHtml } from "@/lib/generateHtml";
 import { headers } from "next/headers";
 
+export const dynamic = "force-dynamic";
+
 export default async function PublicSignaturePage({
   params,
 }: {

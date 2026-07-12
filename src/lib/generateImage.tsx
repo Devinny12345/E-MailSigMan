@@ -19,12 +19,7 @@ export interface SignatureImageInput {
 
 async function fetchImageAsDataUrl(url: string): Promise<string | null> {
   try {
-    const token = process.env.BLOB_READ_WRITE_TOKEN;
-    const headers: Record<string, string> = {};
-    if (token && url.includes("blob.vercel-storage.com")) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-    const res = await fetch(url, { headers, signal: AbortSignal.timeout(8000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (!res.ok) return null;
     const buf = await res.arrayBuffer();
     const ct = res.headers.get("content-type") || "";
