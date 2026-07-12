@@ -32,7 +32,7 @@ async function getFontData(): Promise<ArrayBuffer | null> {
     );
     if (!cssRes.ok) return null;
     const css = await cssRes.text();
-    const woffMatch = css.match(/url\((https:\/\/fonts\.gstatic\.com\/[^)]+\.woff)\)/);
+    const woffMatch = css.match(/url\((https:\/\/fonts\.gstatic\.com\/[^)]+\.(woff2?))\)/);
     if (!woffMatch) return null;
     const fontRes = await fetch(woffMatch[1], { signal: AbortSignal.timeout(5000) });
     if (!fontRes.ok) return null;
