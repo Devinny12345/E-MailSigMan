@@ -8,8 +8,9 @@
  * @module
  */
 
-import type * as signatures from "../signatures.js";
 import type * as admins from "../admins.js";
+import type * as http from "../http.js";
+import type * as signatures from "../signatures.js";
 
 import type {
   ApiFromModules,
@@ -18,8 +19,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  signatures: typeof signatures;
   admins: typeof admins;
+  http: typeof http;
+  signatures: typeof signatures;
 }>;
 
 /**
