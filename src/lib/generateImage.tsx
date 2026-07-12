@@ -144,7 +144,9 @@ function buildImageReact(sig: SignatureImageInput, logoDataUrl: string | null, a
   );
 }
 
-export async function generateSignatureImagePng(sig: SignatureImageInput): Promise<Buffer> {
+export async function generateSignatureImagePng(
+  sig: SignatureImageInput
+): Promise<Buffer> {
   const [fontData, logoDataUrl, avatarDataUrl] = await Promise.all([
     getFontData(),
     sig.companyLogoUrl ? fetchImageAsDataUrl(sig.companyLogoUrl) : null,

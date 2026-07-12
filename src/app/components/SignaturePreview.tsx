@@ -11,6 +11,9 @@ export default function SignaturePreviewPage() {
   const params = useParams();
   const [copied, setCopied] = useState(false);
   const [copiedImg, setCopiedImg] = useState(false);
+  const [copiedRendered, setCopiedRendered] = useState(false);
+  const [rendering, setRendering] = useState(false);
+  const [renderedUrl, setRenderedUrl] = useState<string | null>(null);
 
   const rawSig = useQuery(api.signatures.get, { id: params.id as any });
 
@@ -33,6 +36,28 @@ export default function SignaturePreviewPage() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const handleRender = async () => {
+    setRendering(true);
+    try {
+      const res = await fetch(`/api/render/${sig.id}`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || "Render failed");
+        return;
+      }
+      const { url } = await res.json();
+      setRenderedUrl(url);
+    } catch {
+      alert("Render failed");
+    } finally {
+      setRendering(false);
+    }
+  };
+
+  const displayRenderedUrl = renderedUrl || sig.imageUrl || null;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -69,6 +94,52 @@ export default function SignaturePreviewPage() {
 
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-slate-500 uppercase">Render Image</h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleRender}
+                disabled={rendering}
+                className="bg-green-600 text-white px-4 py-1.5 rounded-lg hover:bg-green-700 transition text-sm font-medium disabled:opacity-50"
+              >
+                {rendering ? "Rendering..." : displayRenderedUrl ? "Re-render" : "Render Image"}
+              </button>
+            </div>
+          </div>
+          <p className="text-xs text-slate-400 mb-4">
+            Generates a static image and stores it on Convex. The URL is permanent and works in email clients.
+          </p>
+          {displayRenderedUrl && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={displayRenderedUrl}
+                  className="flex-1 bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm text-slate-700 font-mono outline-none"
+                  onClick={(e) => e.currentTarget.select()}
+                />
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(displayRenderedUrl);
+                    setCopiedRendered(true);
+                    setTimeout(() => setCopiedRendered(false), 2000);
+                  }}
+                  className="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-200 transition text-sm font-medium border border-slate-200 whitespace-nowrap"
+                >
+                  {copiedRendered ? "Copied!" : "Copy URL"}
+                </button>
+              </div>
+              <img
+                src={displayRenderedUrl}
+                alt="Rendered Signature"
+                className="mt-3 rounded border border-slate-200 max-w-full"
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-slate-500 uppercase">Public Link</h2>
             <button
               onClick={() => {
@@ -90,7 +161,7 @@ export default function SignaturePreviewPage() {
 
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-slate-500 uppercase">Signature Image URL</h2>
+            <h2 className="text-sm font-semibold text-slate-500 uppercase">Dynamic Image URL</h2>
             <button
               onClick={() => {
                 navigator.clipboard.writeText(`${baseUrl}/signatures/${sig.id}.png`);
@@ -110,15 +181,8 @@ export default function SignaturePreviewPage() {
             onClick={(e) => e.currentTarget.select()}
           />
           <p className="text-xs text-slate-400 mt-2">
-            Permanent image URL — use in <code className="text-xs bg-slate-100 px-1 rounded">{'<img>'}</code> tags for email signatures. Updates automatically when you save.
+            Generated on-the-fly each request. Use the <strong>Render Image</strong> section above for a permanent static file.
           </p>
-          {sig.imageUrl && (
-            <img
-              src={sig.imageUrl}
-              alt="Signature"
-              className="mt-4 rounded border border-slate-200 max-w-full"
-            />
-          )}
         </div>
 
         <div className="bg-white rounded-xl border border-slate-200 p-6">
@@ -126,7 +190,8 @@ export default function SignaturePreviewPage() {
             <h2 className="text-sm font-semibold text-slate-500 uppercase">Email HTML (Image)</h2>
             <button
               onClick={() => {
-                navigator.clipboard.writeText(`<img src="${baseUrl}/signatures/${sig.id}.png" alt="Email Signature">`);
+                const imgSrc = displayRenderedUrl || `${baseUrl}/signatures/${sig.id}.png`;
+                navigator.clipboard.writeText(`<img src="${imgSrc}" alt="Email Signature">`);
               }}
               className="bg-slate-100 text-slate-700 px-4 py-1.5 rounded-lg hover:bg-slate-200 transition text-sm font-medium border border-slate-200"
             >
@@ -134,7 +199,10 @@ export default function SignaturePreviewPage() {
             </button>
           </div>
           <pre className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-xs text-slate-700 overflow-x-auto whitespace-pre-wrap max-h-64">
-            {`<img src="${baseUrl}/signatures/${sig.id}.png" alt="Email Signature">`}
+            {(() => {
+              const imgSrc = displayRenderedUrl || `${baseUrl}/signatures/${sig.id}.png`;
+              return `<img src="${imgSrc}" alt="Email Signature">`;
+            })()}
           </pre>
         </div>
 
