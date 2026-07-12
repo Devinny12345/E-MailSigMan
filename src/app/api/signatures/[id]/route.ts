@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { generateSignatureImage } from "@/lib/generateImage";
 
 export async function GET(
   _request: Request,
@@ -45,6 +46,29 @@ export async function PUT(
       taglineLine2: body.taglineLine2,
     },
   });
+
+  try {
+    const imageUrl = await generateSignatureImage({
+      id: signature.id,
+      name: signature.name,
+      title: signature.title,
+      email: signature.email,
+      phone: signature.phone,
+      avatarUrl: signature.avatarUrl,
+      companyLogoUrl: signature.companyLogoUrl,
+      website: signature.website,
+      address: signature.address,
+      facebookUrl: signature.facebookUrl,
+      instagramUrl: signature.instagramUrl,
+      youtubeUrl: signature.youtubeUrl,
+      taglineLine1: signature.taglineLine1,
+      taglineLine2: signature.taglineLine2,
+    });
+    await prisma.signature.update({ where: { id }, data: { imageUrl } });
+    signature.imageUrl = imageUrl;
+  } catch (e) {
+    console.error("Failed to regenerate signature image:", e);
+  }
 
   return NextResponse.json(signature);
 }

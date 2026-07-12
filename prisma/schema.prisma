@@ -28,6 +28,8 @@ model Signature {
   taglineLine1    String   @default("")
   taglineLine2    String   @default("")
 
+  imageUrl     String   @default("")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

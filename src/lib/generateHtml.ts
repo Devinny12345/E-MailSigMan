@@ -17,6 +17,7 @@ export interface SignatureData {
   youtubeUrl: string;
   taglineLine1: string;
   taglineLine2: string;
+  imageUrl?: string;
 }
 
 // Use direct URL if it's already a full public URL (e.g. Vercel Blob CDN),

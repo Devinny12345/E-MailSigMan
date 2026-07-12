@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { generateSignatureImage } from "@/lib/generateImage";
 
 export async function GET(request: Request) {
   try {
@@ -44,6 +45,29 @@ export async function POST(request: Request) {
         taglineLine2: body.taglineLine2 || "",
       },
     });
+
+    try {
+      const imageUrl = await generateSignatureImage({
+        id: signature.id,
+        name: signature.name,
+        title: signature.title,
+        email: signature.email,
+        phone: signature.phone,
+        avatarUrl: signature.avatarUrl,
+        companyLogoUrl: signature.companyLogoUrl,
+        website: signature.website,
+        address: signature.address,
+        facebookUrl: signature.facebookUrl,
+        instagramUrl: signature.instagramUrl,
+        youtubeUrl: signature.youtubeUrl,
+        taglineLine1: signature.taglineLine1,
+        taglineLine2: signature.taglineLine2,
+      });
+      await prisma.signature.update({ where: { id: signature.id }, data: { imageUrl } });
+      signature.imageUrl = imageUrl;
+    } catch (e) {
+      console.error("Failed to generate signature image:", e);
+    }
 
     return NextResponse.json(signature, { status: 201 });
   } catch (error) {

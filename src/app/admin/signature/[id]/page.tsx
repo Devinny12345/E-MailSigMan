@@ -94,7 +94,7 @@ export default function SignaturePreviewPage() {
             <h2 className="text-sm font-semibold text-slate-500 uppercase">Signature Image URL</h2>
             <button
               onClick={() => {
-                navigator.clipboard.writeText(`${baseUrl}/sig-image/${sig.id}`);
+                navigator.clipboard.writeText(`${baseUrl}/signatures/${sig.id}.png`);
                 setCopiedImg(true);
                 setTimeout(() => setCopiedImg(false), 2000);
               }}
@@ -106,13 +106,37 @@ export default function SignaturePreviewPage() {
           <input
             type="text"
             readOnly
-            value={`${baseUrl}/sig-image/${sig.id}`}
+            value={`${baseUrl}/signatures/${sig.id}.png`}
             className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm text-slate-700 font-mono outline-none"
             onClick={(e) => e.currentTarget.select()}
           />
           <p className="text-xs text-slate-400 mt-2">
-            Paste this URL in an <code className="text-xs bg-slate-100 px-1 rounded">{'<img>'}</code> tag to embed the signature as an image.
+            Permanent image URL — use in <code className="text-xs bg-slate-100 px-1 rounded">{'<img>'}</code> tags for email signatures. Updates automatically when you save.
           </p>
+          {sig.imageUrl && (
+            <img
+              src={sig.imageUrl}
+              alt="Signature"
+              className="mt-4 rounded border border-slate-200 max-w-full"
+            />
+          )}
+        </div>
+
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-slate-500 uppercase">Email HTML (Image)</h2>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`<img src="${baseUrl}/signatures/${sig.id}.png" alt="Email Signature">`);
+              }}
+              className="bg-slate-100 text-slate-700 px-4 py-1.5 rounded-lg hover:bg-slate-200 transition text-sm font-medium border border-slate-200"
+            >
+              Copy HTML
+            </button>
+          </div>
+          <pre className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-xs text-slate-700 overflow-x-auto whitespace-pre-wrap max-h-64">
+            {`<img src="${baseUrl}/signatures/${sig.id}.png" alt="Email Signature">`}
+          </pre>
         </div>
 
         <div className="bg-white rounded-xl border border-slate-200 p-6">

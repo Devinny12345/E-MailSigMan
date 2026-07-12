@@ -1,0 +1,185 @@
+import { ImageResponse } from "next/og";
+import { put } from "@vercel/blob";
+
+export interface SignatureImageInput {
+  id: string;
+  name: string;
+  title: string;
+  email: string;
+  phone: string;
+  avatarUrl: string;
+  companyLogoUrl: string;
+  website: string;
+  address: string;
+  facebookUrl: string;
+  instagramUrl: string;
+  youtubeUrl: string;
+  taglineLine1: string;
+  taglineLine2: string;
+}
+
+async function fetchImageAsDataUrl(url: string): Promise<string | null> {
+  try {
+    const token = process.env.BLOB_READ_WRITE_TOKEN;
+    const headers: Record<string, string> = {};
+    if (token && url.includes("blob.vercel-storage.com")) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    const res = await fetch(url, { headers, signal: AbortSignal.timeout(8000) });
+    if (!res.ok) return null;
+    const buf = await res.arrayBuffer();
+    const ct = res.headers.get("content-type") || "";
+    const ext = ct.includes("gif") ? "gif" : "png";
+    const base64 = Buffer.from(buf).toString("base64");
+    return `data:image/${ext};base64,${base64}`;
+  } catch {
+    return null;
+  }
+}
+
+async function getFontData(): Promise<ArrayBuffer | null> {
+  try {
+    const cssRes = await fetch(
+      "https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap",
+      {
+        headers: { "User-Agent": "Mozilla/5.0" },
+        signal: AbortSignal.timeout(5000),
+      }
+    );
+    if (!cssRes.ok) return null;
+    const css = await cssRes.text();
+    const match = css.match(/url\((https:\/\/fonts\.gstatic\.com\/[^)]+\.(woff2?))\)/);
+    if (!match) return null;
+    const fontRes = await fetch(match[1], { signal: AbortSignal.timeout(5000) });
+    if (!fontRes.ok) return null;
+    return fontRes.arrayBuffer();
+  } catch {
+    return null;
+  }
+}
+
+function socialCircle(label: string, bgColor: string) {
+  return (
+    <div
+      style={{
+        width: 26,
+        height: 26,
+        borderRadius: 13,
+        backgroundColor: bgColor,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 11,
+        fontWeight: 700,
+        color: "white",
+        marginRight: 6,
+        fontFamily: "Inter",
+      }}
+    >
+      {label}
+    </div>
+  );
+}
+
+function buildImageReact(sig: SignatureImageInput, logoDataUrl: string | null, avatarDataUrl: string | null) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width: 600,
+        backgroundColor: "#0d3b66",
+        fontFamily: "Inter",
+        padding: "20px 24px 20px 24px",
+      }}
+    >
+      <div style={{ display: "flex", flexDirection: "row" }}>
+        {logoDataUrl && (
+          <div style={{ width: 150, marginRight: 15, display: "flex", alignItems: "flex-start", flexShrink: 0 }}>
+            <img
+              src={logoDataUrl}
+              width={130}
+              height={90}
+              style={{ borderRadius: 14, border: "1px solid #2f5f8f", backgroundColor: "white" }}
+            />
+          </div>
+        )}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", paddingRight: avatarDataUrl ? 15 : 0 }}>
+          <div style={{ fontSize: 26, fontWeight: 700, lineHeight: 1.1, color: "white", marginBottom: 2 }}>
+            {sig.name}
+          </div>
+          <div style={{ fontSize: 14, lineHeight: 1.3, color: "#a9c6e0", marginBottom: 6 }}>
+            {sig.title}
+          </div>
+          <div style={{ borderTop: "2px solid #7bb32e", marginBottom: 8 }} />
+          <div style={{ fontSize: 13, lineHeight: 1.5, color: "white" }}>{sig.phone}</div>
+          <div style={{ fontSize: 13, lineHeight: 1.5, color: "white" }}>{sig.email}</div>
+          {sig.website && <div style={{ fontSize: 13, lineHeight: 1.5, color: "white" }}>{sig.website}</div>}
+          {sig.address && <div style={{ fontSize: 13, lineHeight: 1.5, color: "white" }}>{sig.address}</div>}
+        </div>
+        {avatarDataUrl && (
+          <div style={{ width: 100, display: "flex", justifyContent: "flex-end", flexShrink: 0 }}>
+            <img
+              src={avatarDataUrl}
+              width={90}
+              height={90}
+              style={{ borderRadius: 16, border: "2px solid white", backgroundColor: "white" }}
+            />
+          </div>
+        )}
+      </div>
+      <div style={{ borderTop: "2px solid #2f5f8f", marginTop: 16, marginBottom: 14 }} />
+      <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          {sig.facebookUrl && socialCircle("f", "#1877F2")}
+          {sig.instagramUrl && socialCircle("ig", "#E4405F")}
+          {sig.youtubeUrl && socialCircle("\u25B6", "#FF0000")}
+        </div>
+        <div style={{ flex: 1, textAlign: "right" }}>
+          {sig.taglineLine1 && (
+            <div style={{ fontSize: 14, color: "#a9c6e0", lineHeight: 1.2 }}>{sig.taglineLine1}</div>
+          )}
+          {sig.taglineLine2 && (
+            <div style={{ fontSize: 18, fontWeight: 700, color: "white", lineHeight: 1.2 }}>
+              {sig.taglineLine2}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export async function generateSignatureImage(sig: SignatureImageInput): Promise<string> {
+  const [fontData, logoDataUrl, avatarDataUrl] = await Promise.all([
+    getFontData(),
+    sig.companyLogoUrl ? fetchImageAsDataUrl(sig.companyLogoUrl) : null,
+    sig.avatarUrl ? fetchImageAsDataUrl(sig.avatarUrl) : null,
+  ]);
+
+  const response = new ImageResponse(
+    buildImageReact(sig, logoDataUrl, avatarDataUrl),
+    {
+      width: 600,
+      height: logoDataUrl || avatarDataUrl ? 240 : 220,
+      emoji: "twemoji",
+      fonts: fontData
+        ? [
+            { name: "Inter", data: fontData, weight: 400, style: "normal" },
+            { name: "Inter", data: fontData, weight: 700, style: "normal" },
+          ]
+        : undefined,
+    }
+  );
+
+  const pngBuffer = Buffer.from(await response.arrayBuffer());
+
+  const blob = await put(`signatures/${sig.id}.png`, pngBuffer, {
+    access: "public",
+    contentType: "image/png",
+    addRandomSuffix: false,
+    token: process.env.BLOB_READ_WRITE_TOKEN,
+  });
+
+  return blob.url;
+}
